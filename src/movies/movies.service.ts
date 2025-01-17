@@ -5,6 +5,7 @@ import { HttpService } from '@nestjs/axios';
 import { map, Observable } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import { Movie } from './entities/movie.entity';
+import { SearchMovieDto } from './dto/search-movie.dto';
 
 @Injectable()
 export class MoviesService {
@@ -19,19 +20,42 @@ export class MoviesService {
     return `This action returns all movies`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} movie`;
+  findOne(docId: string) {
+    return `This action returns a #${docId} movie`;
   }
 
-  search(title: string): Observable<AxiosResponse<Movie>> {
+  search(title: string): Observable<SearchMovieDto[]> {
+    interface ApiResponse {
+      Data: {
+        Result: any[];
+      }[];
+    }
     const params = {
       collection: 'kmdb_new2',
       nation: '대한민국',
-      ServiceKey: '',
+      ServiceKey: process.env.ServiceKey,
       query: title,
     };
-    return this.httpService.get(MoviesService.url, { params }).pipe(
-      map(response => response.data)
+    const mapToSearchMovieDto = (data: any): SearchMovieDto => ({
+      DOCID: data.DOCID,
+      movieId: data.movieId,
+      movieSeq: data.movieSeq,
+      title: data.title,
+      titleEng: data.titleEng,
+      titleOrg: data.titleOrg,
+      titleEtc: data.titleEtc,
+      prodYear: data.prodYear,
+      nation: data.nation,
+      company: data.company,
+      runtime: data.runtime,
+      rating: data.rating,
+      genre: data.genre,
+      repRlsDate: data.repRlsDate,
+      posters: data.posters,
+      stlls: data.stlls,
+    });
+    return this.httpService.get<ApiResponse>(MoviesService.url, { params }).pipe(
+      map(response => response.data.Data[0].Result.map(mapToSearchMovieDto))
     );
   }
 
