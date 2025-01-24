@@ -17,9 +17,9 @@ export class MoviesController {
     return this.moviesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.moviesService.findOne(id);
+  @Get(':docId')
+  findOne(@Param('docId') docId: string) {
+    return this.moviesService.findOne(docId);
   }
 
   @Get('title/:title')
@@ -27,13 +27,8 @@ export class MoviesController {
     return this.moviesService.search(title);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
-    return this.moviesService.update(+id, updateMovieDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.moviesService.remove(+id);
+  @Delete(':docId')
+  remove(@Param('docId') docId: string) {
+    return this.moviesService.remove(docId);
   }
 }
