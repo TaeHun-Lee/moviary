@@ -1,15 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
-import { UpdateMovieDto } from './dto/update-movie.dto';
-import { HttpService } from '@nestjs/axios';
-import { map, Observable } from 'rxjs';
-import { AxiosResponse } from 'axios';
-import { Movie } from './entities/movie.entity';
+import * as axios from '@nestjs/axios';
 import { SearchMovieDto } from './dto/search-movie.dto';
+import { KmdbResponse } from './interfaces/kmdb-response.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class MoviesService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: axios.HttpService) {}
   private static url: string = 'http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp';
   private static apiKey: string = process.env.ServiceKey;
   private static movies = [];
@@ -46,39 +44,30 @@ export class MoviesService {
    * @param title 
    * @returns 
    */
-  search(title: string): Observable<SearchMovieDto[]> {
-    interface ApiResponse {
-      Data: {
-        Result: any[];
-      }[];
+  async search(title: string): Promise<SearchMovieDto[]> {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get<KmdbResponse>(MoviesService.url, {
+          params: {
+            collection: 'kmdb_new2',
+            nation: '대한민국',
+            ServiceKey: MoviesService.apiKey,
+            query: title
+          }
+        })
+      );
+
+      if (!data.Data[0].Result?.length) {
+        throw new NotFoundException(`No movies found with title: ${title}`);
+      }
+
+      return data.Data[0].Result;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to fetch movies: ${error.message}`);
     }
-    const params = {
-      collection: 'kmdb_new2',
-      nation: '대한민국',
-      ServiceKey: MoviesService.apiKey,
-      query: title,
-    };
-    const mapToSearchMovieDto = (data: any): SearchMovieDto => ({
-      DOCID: data.DOCID,
-      movieId: data.movieId,
-      movieSeq: data.movieSeq,
-      title: data.title,
-      titleEng: data.titleEng,
-      titleOrg: data.titleOrg,
-      titleEtc: data.titleEtc,
-      prodYear: data.prodYear,
-      nation: data.nation,
-      company: data.company,
-      runtime: data.runtime,
-      rating: data.rating,
-      genre: data.genre,
-      repRlsDate: data.repRlsDate,
-      posters: data.posters,
-      stlls: data.stlls,
-    });
-    return this.httpService.get<ApiResponse>(MoviesService.url, { params }).pipe(
-      map(response => response.data.Data[0].Result.map(mapToSearchMovieDto))
-    );
   }
 
   /**
