@@ -8,8 +8,10 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class MoviesService {
   constructor(private readonly httpService: axios.HttpService) {}
-  private static url: string = 'http://api.koreafilm.or.kr/openapi-data2/wisenut/search_api/search_json2.jsp';
-  private static apiKey: string = process.env.ServiceKey;
+  private static url: string = process.env.KMDB_API_URL;
+  private static collection: string = process.env.KMDB_COLLECTION;
+  private static nation: string = process.env.KMDB_NATION;
+  private static serviceKey: string = process.env.KMDB_SERVICE_KEY;
   private static movies = [];
   
   /**
@@ -49,9 +51,9 @@ export class MoviesService {
       const { data } = await firstValueFrom(
         this.httpService.get<KmdbResponse>(MoviesService.url, {
           params: {
-            collection: 'kmdb_new2',
-            nation: '대한민국',
-            ServiceKey: MoviesService.apiKey,
+            collection: MoviesService.collection,
+            nation: MoviesService.nation,
+            ServiceKey: MoviesService.serviceKey,
             query: title
           }
         })
