@@ -1,22 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-
-@Entity()
 export class User {
-  @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
   username: string;
-
-  @Column()
   email: string;
-
-  @Column()
   password: string;
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  isActive: boolean = true;
+  createdAt: Date = new Date();
 }
